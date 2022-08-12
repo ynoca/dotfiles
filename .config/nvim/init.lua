@@ -1,3 +1,76 @@
+vim.cmd("autocmd!")
+
+-- encoding 
+vim.scriptencoding = 'utf-8'
+vim.opt.encoding = 'utf-8'
+vim.opt.fileencoding = 'utf-8'
+
+-- view
+vim.wo.relativenumber = true
+vim.wo.number = true
+vim.opt.hlsearch = true
+vim.opt.cursorline = true
+
+-- clipboard
+vim.o.clipboard = 'unnamedplus'
+
+-- tmporary file
+vim.o.undofile = true
+vim.o.swapfile = false
+
+-- swap : and ; 
+vim.api.nvim_set_keymap('n', ';', ':', { noremap = true })
+vim.api.nvim_set_keymap('n', ':', ';', { noremap = true })
+vim.api.nvim_set_keymap('v', ';', ':', { noremap = true })
+vim.api.nvim_set_keymap('v', ':', ';', { noremap = true })
+vim.api.nvim_set_keymap('i', ';', ':', { noremap = true })
+vim.api.nvim_set_keymap('i', ':', ';', { noremap = true })
+vim.api.nvim_set_keymap('t', ';', ':', { noremap = true })
+vim.api.nvim_set_keymap('t', ':', ';', { noremap = true })
+
+-- window
+vim.api.nvim_set_keymap('n', '<C-h>', '<C-w>h', { noremap = true })
+vim.api.nvim_set_keymap('n', '<C-j>', '<C-w>j', { noremap = true })
+vim.api.nvim_set_keymap('n', '<C-k>', '<C-w>k', { noremap = true })
+vim.api.nvim_set_keymap('n', '<C-l>', '<C-w>l', { noremap = true })
+vim.api.nvim_set_keymap('n', '<Left>' , '<C-w><', { noremap = true })
+vim.api.nvim_set_keymap('n', '<Down>' , '<C-w>-', { noremap = true })
+vim.api.nvim_set_keymap('n', '<Up>'   , '<C-w>+', { noremap = true })
+vim.api.nvim_set_keymap('n', '<Right>', '<C-w>>', { noremap = true })
+vim.api.nvim_set_keymap('n', 'gn', '<Cmd>split<CR><C-w>w', { noremap = true, silent= true })
+vim.api.nvim_set_keymap('n', 'gv', '<Cmd>vsplit<CR><C-w>w', { noremap = true, silent= true })
+
+-- edit
+local tab_size = 2
+vim.o.shiftwidth  = tab_size
+vim.o.softtabstop = tab_size
+vim.o.expandtab   = true
+vim.o.autoindent  = true
+vim.o.smartindent = true
+vim.api.nvim_set_keymap('n', 'U', '<C-r>', { noremap = true })
+vim.api.nvim_set_keymap('n', '<CR>', '<Cmd>write<CR>', { noremap = true })
+vim.api.nvim_set_keymap('n', 'k', 'gk', {noremap = true})
+vim.api.nvim_set_keymap('n', 'j', 'gj', {noremap = true})
+vim.api.nvim_set_keymap('n', 'H', '0', {noremap = true})
+vim.api.nvim_set_keymap('n', 'J', '}', {noremap = true})
+vim.api.nvim_set_keymap('n', 'K', '{', {noremap = true})
+vim.api.nvim_set_keymap('n', 'L', '$', {noremap = true})
+vim.api.nvim_set_keymap('n', 'R', 'U', {noremap = true})
+
+-- tab
+vim.api.nvim_set_keymap('n', 'gt', '<Cmd>tabnew<CR>', {noremap = true, silent = true })
+vim.api.nvim_set_keymap('n', 'gq', '<Cmd>quit<CR>', {noremap = true, silent = true })
+vim.api.nvim_set_keymap('n', '<S-Tab>', '<Cmd>tabprevious<CR>', {noremap = true, silent = true })
+vim.api.nvim_set_keymap('n', '<Tab>', '<Cmd>tabnext<CR>', {noremap = true, silent = true })
+
+-- terminal
+vim.api.nvim_set_keymap('t', '<C-f>', '<C-\\><C-n>', {noremap = true, silent = true })
+
+-- reload init.lua
+vim.api.nvim_set_keymap('n', '<F5>', '<Cmd>source $MYVIMRC<CR>', { noremap = true })
+vim.api.nvim_set_keymap('n', '<F6>', '<Cmd>edit $MYVIMRC<CR>',   { noremap = true })
+
+
 -- packer
 local fn = vim.fn
 local install_path = fn.stdpath('data') .. '/site/pack/packer/start/packer.nvim'
@@ -11,7 +84,7 @@ require('packer').startup(
     use { 'EdenEast/nightfox.nvim' }
     use { 'nvim-lualine/lualine.nvim' }
     use { 'kyazdani42/nvim-web-devicons' }
-    use { 'romgrk/barbar.nvim' }
+    -- use { 'romgrk/barbar.nvim' }
     use { 'lukas-reineke/indent-blankline.nvim' }
     use { 'nvim-treesitter/nvim-treesitter' }
     use { 'neovim/nvim-lspconfig' }
@@ -39,8 +112,25 @@ require('packer').startup(
         {'MunifTanjim/nui.nvim'}
       }
     }
+    use {'jose-elias-alvarez/null-ls.nvim'}
+    -- use {'MunifTanjim/prettier.nvim'}
+    use {'akinsho/bufferline.nvim', tag = "v2.*", requires = 'kyazdani42/nvim-web-devicons'}
+    use {"akinsho/toggleterm.nvim", tag = 'v2.*'}
   end
 )
+require("toggleterm").setup()
+
+require('bufferline').setup {
+  options = {
+    mode = "tabs", -- set to "tabs" to only show tabpages instead
+    numbers = "none", 
+    indicator_icon = '▎',
+    modified_icon = '●',
+    left_trunc_marker = '',
+    right_trunc_marker = '',
+    separator_style = "slant"
+  }
+}
 
 require('nvim-treesitter.configs').setup {
   highlight = {
@@ -50,9 +140,9 @@ require('nvim-treesitter.configs').setup {
 require('nvim-ts-autotag').setup()
 require('telescope').load_extension('frecency')
 require('telescope').load_extension('file_browser')
-vim.api.nvim_set_keymap('n', '<Space>ff', '<cmd>Telescope find_files<CR>',   { noremap = true })
+vim.api.nvim_set_keymap('n', '<Space>fg', '<cmd>Telescope find_files<CR>',   { noremap = true })
 vim.api.nvim_set_keymap('n', '<Space>fh', '<cmd>Telescope oldfiles<CR>',   { noremap = true })
-vim.api.nvim_set_keymap('n', '<Space>te', '<cmd>Telescope<CR>',   { noremap = true })
+vim.api.nvim_set_keymap('n', '<Space>ff', '<cmd>Telescope file_browser<CR>',   { noremap = true })
 
 require('Comment').setup( {
   padding = true,
@@ -152,41 +242,3 @@ require('lualine').setup {
   inactive_winbar = {},
   extensions = {}
 }
-
--- view
-vim.wo.relativenumber = true
-vim.wo.number = true
-
--- clipboard
-vim.o.clipboard = 'unnamedplus'
-vim.o.undofile = true
-vim.o.swapfile = false
-
--- swap : and ; 
-vim.api.nvim_set_keymap('n', ';', ':', { noremap = true })
-vim.api.nvim_set_keymap('n', ':', ';', { noremap = true })
-vim.api.nvim_set_keymap('v', ';', ':', { noremap = true })
-vim.api.nvim_set_keymap('v', ':', ';', { noremap = true })
-vim.api.nvim_set_keymap('i', ';', ':', { noremap = true })
-vim.api.nvim_set_keymap('i', ':', ';', { noremap = true })
-vim.api.nvim_set_keymap('t', ';', ':', { noremap = true })
-vim.api.nvim_set_keymap('t', ':', ';', { noremap = true })
-
---edit
-local tab_size = 2
-vim.o.shiftwidth  = tab_size
-vim.o.softtabstop = tab_size
-vim.o.expandtab   = true
-vim.o.autoindent  = true
-vim.o.smartindent = true
-vim.api.nvim_set_keymap('n', 'U', '<C-r>', { noremap = true })
-vim.api.nvim_set_keymap('n', '<CR>', '<Cmd>write<CR>', { noremap = true })
-vim.api.nvim_set_keymap('n', 'k', 'gk', {noremap = true})
-vim.api.nvim_set_keymap('n', 'gk', 'k', {noremap = true})
-vim.api.nvim_set_keymap('n', 'j', 'gj', {noremap = true})
-vim.api.nvim_set_keymap('n', 'gj', 'j', {noremap = true})
-
--- reload init.lua
-vim.api.nvim_set_keymap('n', '<F5>', '<Cmd>source $MYVIMRC<CR>', { noremap = true })
-vim.api.nvim_set_keymap('n', '<F6>', '<Cmd>edit $MYVIMRC<CR>',   { noremap = true })
-
