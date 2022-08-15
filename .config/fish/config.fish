@@ -1,6 +1,6 @@
 if status is-interactive
     # Commands to run in interactive sessions can go here
-    source ~/.asdf/asdf.fish
+    source /usr/local/opt/asdf/asdf.fish
 
     abbr -a ls 'exa'
     abbr -a ll 'exa -l'
@@ -8,3 +8,4 @@ if status is-interactive
 
     abbr -a v 'nvim'
 end
+

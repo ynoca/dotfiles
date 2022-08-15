@@ -12,6 +12,11 @@ vim.opt.hlsearch = true
 vim.opt.cursorline = true
 vim.opt.signcolumn = 'yes:2'
 vim.opt.termguicolors = true
+vim.opt.scrolloff = 999
+vim.fn.sign_define('DiagnosticSignError', { text = ' ', texthl = 'DiagnosticError' })
+vim.fn.sign_define('DiagnosticSignWarn', { text = ' ', texthl = 'DiagnosticWarn' })
+vim.fn.sign_define('DiagnosticSignInfo', { text = ' ', texthl = 'DiagnosticInfo' })
+vim.fn.sign_define('DiagnosticSignHint', { text = ' ', texthl = 'DiagnosticHint' })
 
 -- clipboard
 vim.o.clipboard = 'unnamedplus'
@@ -24,6 +29,7 @@ vim.o.swapfile = false
 vim.api.nvim_set_keymap('n', ';', ':', { noremap = true })
 vim.api.nvim_set_keymap('n', ':', ';', { noremap = true })
 vim.api.nvim_set_keymap('v', ';', ':', { noremap = true })
+
 vim.api.nvim_set_keymap('v', ':', ';', { noremap = true })
 vim.api.nvim_set_keymap('i', ';', ':', { noremap = true })
 vim.api.nvim_set_keymap('i', ':', ';', { noremap = true })
@@ -68,11 +74,15 @@ vim.api.nvim_set_keymap('n', '<Tab>', '<Cmd>tabnext<CR>', { noremap = true, sile
 
 -- terminal
 vim.api.nvim_set_keymap('t', '<C-f>', '<C-\\><C-n>', { noremap = true, silent = true })
+vim.cmd('augroup Terminal')
+vim.cmd('autocmd!')
+vim.cmd('autocmd TermOpen * setlocal nonumber norelativenumber')
+vim.cmd('augroup END')
+
 
 -- reload init.lua
-vim.api.nvim_set_keymap('n', '<F5>', '<Cmd>source $MYVIMRC<CR><Cmd>noh<CR>', { noremap = true })
-vim.api.nvim_set_keymap('n', '<F6>', '<Cmd>edit $MYVIMRC<CR>', { noremap = true })
-vim.api.nvim_set_keymap('n', '<F7>', '<Cmd>PackerInstall<CR>', { noremap = true })
+vim.api.nvim_set_keymap('n', ',.', '<Cmd>source $MYVIMRC<CR><Cmd>noh<CR>', { noremap = true })
+vim.api.nvim_set_keymap('n', ',,', '<Cmd>edit $MYVIMRC<CR>', { noremap = true })
 
 -- packer
 local fn = vim.fn
@@ -82,14 +92,14 @@ if fn.empty(fn.glob(install_path)) > 0 then
     install_path })
 end
 
+vim.api.nvim_command [[packadd packer.nvim]]
+
+
 require('packer').startup(
   function(use)
 
     use {
       'wbthomason/packer.nvim',
-      opt = true
-      -- config = function()
-      -- end
     }
 
     use {
@@ -166,6 +176,8 @@ require('packer').startup(
       'nvim-treesitter/nvim-treesitter',
       config = function()
         require('nvim-treesitter.configs').setup {
+          sync_install = false,
+          auto_install = true,
           highlight = {
             enable = true,
             disable = {},
@@ -212,11 +224,11 @@ require('packer').startup(
         -- Lua
         require('lspconfig').sumneko_lua.setup {
           on_attach = on_attach,
-          cmd = {
-            os.getenv("HOME") .. '/.lua-language-server/bin/lua-language-server',
-            '-E',
-            os.getenv("HOME") .. '/.lua-language-server/bin/main.lua',
-          },
+          -- cmd = {
+          -- os.getenv("HOME") .. '/.lua-language-server/bin/lua-language-server',
+          -- '-E',
+          -- os.getenv("HOME") .. '/.lua-language-server/bin/main.lua',
+          -- },
           settings = {
             Lua = {
               diagnostics = {
@@ -238,11 +250,8 @@ require('packer').startup(
       branch = "main",
       config = function()
         local saga = require("lspsaga")
-
         saga.init_lsp_saga({
-          diagnostic_header = { " ", " ", " ", "ﴞ " },
           border_style = "bold",
-
         })
       end,
     }
@@ -305,6 +314,7 @@ require('packer').startup(
           'noselect'
         }
       end,
+      require = 'onsails/lspkind-nvim',
     }
     use { 'L3MON4D3/LuaSnip' }
     use { 'hrsh7th/cmp-nvim-lsp' }
@@ -319,12 +329,14 @@ require('packer').startup(
 
     use {
       'numToStr/Comment.nvim',
-      config = require('Comment').setup {
-        padding = true,
-        toggler = {
-          line = 'cc',
-        },
-      }
+      config = function()
+        require('Comment').setup {
+          padding = true,
+          toggler = {
+            line = 'cc',
+          },
+        }
+      end
     }
     use { 'andymass/vim-matchup' }
     use {
@@ -347,26 +359,28 @@ require('packer').startup(
       'akinsho/bufferline.nvim',
       tag = "v2.*",
       requires = 'kyazdani42/nvim-web-devicons',
-      config = require('bufferline').setup {
-        options = {
-          mode = "tabs", -- set to "tabs" to only show tabpages instead
-          always_show_bufferline = true,
-          show_buffer_close_icons = false,
-          show_close_icon = false,
-          color_icons = true,
-          numbers = "none",
-          indicator_icon = '▎',
-          modified_icon = '●',
-          left_trunc_marker = '',
-          right_trunc_marker = '',
-          separator_style = "slant"
-        },
-        highlights = {
-          buffer_selected = {
-            underline = true,
+      config = function()
+        require('bufferline').setup {
+          options = {
+            mode = "tabs", -- set to "tabs" to only show tabpages instead
+            always_show_bufferline = true,
+            show_buffer_close_icons = false,
+            show_close_icon = false,
+            color_icons = true,
+            numbers = "none",
+            indicator_icon = '▎',
+            modified_icon = '●',
+            left_trunc_marker = '',
+            right_trunc_marker = '',
+            -- separator_style = "slant"
           },
-        },
-      }
+          highlights = {
+            buffer_selected = {
+              underline = true,
+            },
+          },
+        }
+      end
     }
 
     use {
@@ -375,11 +389,14 @@ require('packer').startup(
       config = function()
         require("toggleterm").setup {
         }
-        vim.api.nvim_set_keymap('n', '<F1>', '<cmd>1ToggleTerm<CR>', { noremap = true })
-        vim.api.nvim_set_keymap('n', '<F2>', '<cmd>2ToggleTerm<CR>', { noremap = true })
-        vim.api.nvim_set_keymap('n', '<F3>', '<cmd>3ToggleTerm<CR>', { noremap = true })
-        vim.api.nvim_set_keymap('n', '<F4>', '<cmd>ToggleTermToggleAll<CR>', { noremap = true })
-        vim.api.nvim_set_keymap('t', '<F4>', '<cmd>ToggleTermToggleAll<CR>', { noremap = true })
+        vim.api.nvim_set_keymap('n', '<C-1>', '<cmd>1ToggleTerm<CR>', { noremap = true })
+        vim.api.nvim_set_keymap('t', '<C-1>', '<cmd>1ToggleTerm<CR>', { noremap = true })
+        vim.api.nvim_set_keymap('n', '<C-2>', '<cmd>2ToggleTerm<CR>', { noremap = true })
+        vim.api.nvim_set_keymap('t', '<C-2>', '<cmd>2ToggleTerm<CR>', { noremap = true })
+        vim.api.nvim_set_keymap('n', '<C-3>', '<cmd>3ToggleTerm<CR>', { noremap = true })
+        vim.api.nvim_set_keymap('t', '<C-3>', '<cmd>3ToggleTerm<CR>', { noremap = true })
+        vim.api.nvim_set_keymap('n', '<C-4>', '<cmd>ToggleTermToggleAll<CR>', { noremap = true })
+        vim.api.nvim_set_keymap('t', '<C-4>', '<cmd>ToggleTermToggleAll<CR>', { noremap = true })
       end
     }
 
@@ -387,21 +404,30 @@ require('packer').startup(
       'nvim-telescope/telescope.nvim',
       tag = '0.1.0',
       config = function()
+        local fb_actions = require "telescope".extensions.file_browser.actions
         require('telescope').setup {
           defaults = {
-            layout_config = {
-              vertical = { width = 1 }
+            vertical = {
+              mirror = true,
             },
           },
           extensions = {
             file_browser = {
-              theme = 'ivy',
-              hijack_netrw = true
+              hijack_netrw = true,
+              mapping = {
+                ["i"] = {
+                  ["<C-h>"] = fb_actions.goto_home_dir,
+                  ["<C-d>"] = function(prompt_bufnr)
+                    fb_actions.remove(prompt_bufnr)
+                  end,
+                },
+              },
             }
 
           },
         }
         vim.api.nvim_set_keymap('n', '<Space>fh', '<cmd>Telescope oldfiles<CR>', { noremap = true })
+        vim.api.nvim_set_keymap('n', '<Space>fH', '<cmd>Telescope help_tags<CR>', { noremap = true })
       end
     }
 
@@ -426,6 +452,7 @@ require('packer').startup(
     use {
       'onsails/lspkind-nvim',
     }
+
     use {
       'jose-elias-alvarez/null-ls.nvim',
       config = function()
@@ -438,6 +465,8 @@ require('packer').startup(
       end
     }
 
-
+    if Packer_bootstrap then
+      require('packer').sync()
+    end
   end
 )
