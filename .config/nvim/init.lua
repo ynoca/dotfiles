@@ -29,7 +29,6 @@ vim.o.swapfile = false
 vim.api.nvim_set_keymap('n', ';', ':', { noremap = true })
 vim.api.nvim_set_keymap('n', ':', ';', { noremap = true })
 vim.api.nvim_set_keymap('v', ';', ':', { noremap = true })
-
 vim.api.nvim_set_keymap('v', ':', ';', { noremap = true })
 vim.api.nvim_set_keymap('i', ';', ':', { noremap = true })
 vim.api.nvim_set_keymap('i', ':', ';', { noremap = true })
@@ -69,8 +68,10 @@ vim.api.nvim_set_keymap('n', '<C-c><C-c>', '<Cmd>nohlsearch<CR>', { noremap = tr
 -- tab
 vim.api.nvim_set_keymap('n', 'gt', '<Cmd>tabnew<CR>', { noremap = true, silent = true })
 vim.api.nvim_set_keymap('n', 'gq', '<Cmd>quit<CR>', { noremap = true, silent = true })
-vim.api.nvim_set_keymap('n', '<S-Tab>', '<Cmd>tabprevious<CR>', { noremap = true, silent = true })
-vim.api.nvim_set_keymap('n', '<Tab>', '<Cmd>tabnext<CR>', { noremap = true, silent = true })
+
+
+-- fold
+vim.o.foldmethod = 'marker'
 
 -- terminal
 vim.api.nvim_set_keymap('t', '<C-f>', '<C-\\><C-n>', { noremap = true, silent = true })
@@ -93,7 +94,6 @@ if fn.empty(fn.glob(install_path)) > 0 then
 end
 
 vim.api.nvim_command [[packadd packer.nvim]]
-
 
 require('packer').startup(
   function(use)
@@ -224,15 +224,9 @@ require('packer').startup(
         -- Lua
         require('lspconfig').sumneko_lua.setup {
           on_attach = on_attach,
-          -- cmd = {
-          -- os.getenv("HOME") .. '/.lua-language-server/bin/lua-language-server',
-          -- '-E',
-          -- os.getenv("HOME") .. '/.lua-language-server/bin/main.lua',
-          -- },
           settings = {
             Lua = {
               diagnostics = {
-                -- Get the language server to recognize the `vim` global
                 globals = { 'vim' },
               },
             },
@@ -242,6 +236,13 @@ require('packer').startup(
           underline = true,
           update_in_insert = true
         }
+      end
+    }
+
+    use {
+      'j-hui/fidget.nvim',
+      config = function()
+        require('fidget').setup()
       end
     }
 
@@ -270,7 +271,6 @@ require('packer').startup(
           ensure_installed = {
             "sumneko_lua",
           },
-
         }
       end
     }
@@ -278,10 +278,8 @@ require('packer').startup(
     use {
       'hrsh7th/nvim-cmp',
       config = function()
-
         local cmp = require('cmp')
         cmp.setup({
-
           snippet = {
             expand = function(args)
               require('luasnip').lsp_expand(args.body)
@@ -291,6 +289,8 @@ require('packer').startup(
             { name = 'nvim_lsp' },
             { name = 'buffer' },
             { name = 'path' },
+            { name = 'nvim_lua' },
+            { name = 'nvim_lsp_signature_help' },
           },
           mapping = cmp.mapping.preset.insert({
             ['<C-p>'] = cmp.mapping.select_prev_item(),
@@ -317,14 +317,15 @@ require('packer').startup(
       require = 'onsails/lspkind-nvim',
     }
     use { 'L3MON4D3/LuaSnip' }
-    use { 'hrsh7th/cmp-nvim-lsp' }
-    use { 'hrsh7th/cmp-buffer' }
-    use { 'hrsh7th/cmp-path' }
-    use { 'hrsh7th/cmp-cmdline' }
-    use { 'hrsh7th/vim-vsnip' }
+    use {
+      'hrsh7th/cmp-nvim-lsp',
+      'hrsh7th/cmp-buffer',
+      'hrsh7th/cmp-path',
+      'hrsh7th/cmp-cmdline',
+      'hrsh7th/cmp-nvim-lsp-signature-help',
+    }
     use { 'tami5/sqlite.lua' }
     use { 'nvim-lua/plenary.nvim' }
-    -- use { 'glepnir/dashboard-nvim' }
     use { 'jiangmiao/auto-pairs' }
 
     use {
@@ -362,17 +363,15 @@ require('packer').startup(
       config = function()
         require('bufferline').setup {
           options = {
+
+            separator_style = 'padded_slant',
             mode = "tabs", -- set to "tabs" to only show tabpages instead
             always_show_bufferline = true,
             show_buffer_close_icons = false,
             show_close_icon = false,
             color_icons = true,
-            numbers = "none",
-            indicator_icon = '▎',
-            modified_icon = '●',
-            left_trunc_marker = '',
-            right_trunc_marker = '',
-            -- separator_style = "slant"
+            -- indicator_icon = '',
+            -- modified_icon = '●',
           },
           highlights = {
             buffer_selected = {
@@ -380,11 +379,12 @@ require('packer').startup(
             },
           },
         }
+        vim.api.nvim_set_keymap('n', '<S-Tab>', '<Cmd>BufferLineCyclePrev<CR>', { noremap = true, silent = true })
+        vim.api.nvim_set_keymap('n', '<Tab>', '<Cmd>BufferLineCycleNext<CR>', { noremap = true, silent = true })
       end
     }
 
-    use {
-      "akinsho/toggleterm.nvim",
+    use { "akinsho/toggleterm.nvim",
       tag = 'v2.*',
       config = function()
         require("toggleterm").setup {
@@ -400,8 +400,7 @@ require('packer').startup(
       end
     }
 
-    use {
-      'nvim-telescope/telescope.nvim',
+    use { 'nvim-telescope/telescope.nvim',
       tag = '0.1.0',
       config = function()
         local fb_actions = require "telescope".extensions.file_browser.actions
@@ -423,7 +422,6 @@ require('packer').startup(
                 },
               },
             }
-
           },
         }
         vim.api.nvim_set_keymap('n', '<Space>fh', '<cmd>Telescope oldfiles<CR>', { noremap = true })
@@ -458,15 +456,27 @@ require('packer').startup(
       config = function()
         require("null-ls").setup({
           sources = {
-            require("null-ls").builtins.diagnostics.eslint,
-            require("null-ls").builtins.completion.spell,
+            -- require("null-ls").builtins.diagnostics.eslint,
+            -- require("null-ls").builtins.completion.spell,
           },
         })
       end
     }
 
+    use {
+      'mfussenegger/nvim-treehopper'
+    }
+
     if Packer_bootstrap then
       require('packer').sync()
     end
+
+    use {
+      "petertriho/nvim-scrollbar",
+      config = function()
+        require("scrollbar").setup()
+      end
+    }
+
   end
 )
