@@ -13,6 +13,7 @@ vim.opt.cursorline = true
 vim.opt.signcolumn = 'yes:2'
 vim.opt.termguicolors = true
 vim.opt.scrolloff = 999
+vim.opt.wrap = false
 vim.fn.sign_define('DiagnosticSignError', { text = ' ', texthl = 'DiagnosticError' })
 vim.fn.sign_define('DiagnosticSignWarn', { text = ' ', texthl = 'DiagnosticWarn' })
 vim.fn.sign_define('DiagnosticSignInfo', { text = ' ', texthl = 'DiagnosticInfo' })
@@ -100,12 +101,33 @@ require('packer').startup(
 
     use {
       'wbthomason/packer.nvim',
+      config = function()
+        vim.api.nvim_set_keymap('n', '<Space>pc', '<Cmd>PackerCompile<CR>', { noremap = true, silent = true })
+        vim.api.nvim_set_keymap('n', '<Space>pi', '<Cmd>PackerInstall<CR>', { noremap = true, silent = true })
+        vim.api.nvim_set_keymap('n', '<Space>ps', '<Cmd>PackerSync<CR>', { noremap = true, silent = true })
+      end
     }
 
     use {
       'EdenEast/nightfox.nvim',
       config = function()
+        require('nightfox').setup({
+          options = {
+            styles = {
+              comments = "italic",
+              keywords = "bold",
+              types = "bold",
+            }
+          }
+        })
         vim.api.nvim_command [[colorscheme duskfox]]
+      end
+    }
+    use {
+      'overcache/NeoSolarized',
+      disable = true,
+      config = function()
+        vim.api.nvim_command [[colorscheme NeoSolarized]]
       end
     }
 
@@ -205,8 +227,9 @@ require('packer').startup(
     use {
       'neovim/nvim-lspconfig',
       config = function()
+        local lspconfig = require('lspconfig')
         local on_attach = function(client, bufnr)
-          -- format on save
+          -- Format on save
           if client.server_capabilities.documentFormattingProvider then
             vim.api.nvim_create_autocmd("BufWritePre", {
               group = vim.api.nvim_create_augroup("Format", { clear = true }),
@@ -215,14 +238,17 @@ require('packer').startup(
             })
           end
         end
+        -- Enable (broadcasting) snippet capability for completion
+        local capabilities = vim.lsp.protocol.make_client_capabilities()
+        capabilities.textDocument.completion.completionItem.snippetSupport = true
         -- TypeScript
-        require('lspconfig').tsserver.setup {
+        lspconfig.tsserver.setup {
           on_attach = on_attach,
           filetypes = { "typescript", "typescriptreact", "typescript.tsx" },
           cmd = { "typescript-language-server", "--stdio" }
         }
         -- Lua
-        require('lspconfig').sumneko_lua.setup {
+        lspconfig.sumneko_lua.setup {
           on_attach = on_attach,
           settings = {
             Lua = {
@@ -235,6 +261,17 @@ require('packer').startup(
           signs = true,
           underline = true,
           update_in_insert = true
+        }
+        -- JSON
+        lspconfig.jsonls.setup {
+          on_attach = on_attach,
+          capabilities = capabilities,
+          filetypes = { "json" },
+        }
+        lspconfig.html.setup {
+          on_attach = on_attach,
+          capabilities = capabilities,
+          filetypes = { "html" },
         }
       end
     }
@@ -270,6 +307,8 @@ require('packer').startup(
         require('mason-lspconfig').setup {
           ensure_installed = {
             "sumneko_lua",
+            "css-lsp",
+            "html-lsp",
           },
         }
       end
@@ -326,6 +365,7 @@ require('packer').startup(
     }
     use { 'tami5/sqlite.lua' }
     use { 'nvim-lua/plenary.nvim' }
+    use { 'nvim-lua/popup.nvim' }
     use { 'jiangmiao/auto-pairs' }
 
     use {
@@ -339,7 +379,7 @@ require('packer').startup(
         }
       end
     }
-    use { 'andymass/vim-matchup' }
+
     use {
       'windwp/nvim-ts-autotag',
       config = function()
@@ -364,14 +404,12 @@ require('packer').startup(
         require('bufferline').setup {
           options = {
 
-            separator_style = 'padded_slant',
+            -- separator_style = 'padded_slant',
             mode = "tabs", -- set to "tabs" to only show tabpages instead
-            always_show_bufferline = true,
+            always_show_bufferline = false,
             show_buffer_close_icons = false,
             show_close_icon = false,
             color_icons = true,
-            -- indicator_icon = '',
-            -- modified_icon = '●',
           },
           highlights = {
             buffer_selected = {
@@ -389,14 +427,14 @@ require('packer').startup(
       config = function()
         require("toggleterm").setup {
         }
-        vim.api.nvim_set_keymap('n', '<C-1>', '<cmd>1ToggleTerm<CR>', { noremap = true })
-        vim.api.nvim_set_keymap('t', '<C-1>', '<cmd>1ToggleTerm<CR>', { noremap = true })
-        vim.api.nvim_set_keymap('n', '<C-2>', '<cmd>2ToggleTerm<CR>', { noremap = true })
-        vim.api.nvim_set_keymap('t', '<C-2>', '<cmd>2ToggleTerm<CR>', { noremap = true })
-        vim.api.nvim_set_keymap('n', '<C-3>', '<cmd>3ToggleTerm<CR>', { noremap = true })
-        vim.api.nvim_set_keymap('t', '<C-3>', '<cmd>3ToggleTerm<CR>', { noremap = true })
-        vim.api.nvim_set_keymap('n', '<C-4>', '<cmd>ToggleTermToggleAll<CR>', { noremap = true })
-        vim.api.nvim_set_keymap('t', '<C-4>', '<cmd>ToggleTermToggleAll<CR>', { noremap = true })
+        vim.api.nvim_set_keymap('n', '<Space>t1', '<cmd>1ToggleTerm<CR>', { noremap = true })
+        vim.api.nvim_set_keymap('t', '<Space>t1', '<cmd>1ToggleTerm<CR>', { noremap = true })
+        vim.api.nvim_set_keymap('n', '<Space>t2', '<cmd>2ToggleTerm<CR>', { noremap = true })
+        vim.api.nvim_set_keymap('t', '<Space>t2', '<cmd>2ToggleTerm<CR>', { noremap = true })
+        vim.api.nvim_set_keymap('n', '<Space>t3', '<cmd>3ToggleTerm<CR>', { noremap = true })
+        vim.api.nvim_set_keymap('t', '<Space>t3', '<cmd>3ToggleTerm<CR>', { noremap = true })
+        vim.api.nvim_set_keymap('n', '<Space>tt', '<cmd>ToggleTermToggleAll<CR>', { noremap = true })
+        vim.api.nvim_set_keymap('t', '<Space>tt', '<cmd>ToggleTermToggleAll<CR>', { noremap = true })
       end
     }
 
@@ -446,6 +484,14 @@ require('packer').startup(
       end,
       requires = 'nvim-telescope/telescope.nvim',
     }
+    use {
+      'nvim-telescope/telescope-media-files.nvim',
+      config = function()
+        require('telescope').load_extension('media_files')
+      end,
+      requires = 'nvim-telescope/telescope.nvim',
+    }
+
 
     use {
       'onsails/lspkind-nvim',
@@ -453,6 +499,7 @@ require('packer').startup(
 
     use {
       'jose-elias-alvarez/null-ls.nvim',
+      requires = { "nvim-lua/plenary.nvim" },
       config = function()
         require("null-ls").setup({
           sources = {
@@ -466,10 +513,9 @@ require('packer').startup(
     use {
       'mfussenegger/nvim-treehopper'
     }
-
-    if Packer_bootstrap then
-      require('packer').sync()
-    end
+    use {
+      'machakann/vim-sandwich'
+    }
 
     use {
       "petertriho/nvim-scrollbar",
@@ -477,6 +523,10 @@ require('packer').startup(
         require("scrollbar").setup()
       end
     }
+
+    if Packer_bootstrap then
+      require('packer').sync()
+    end
 
   end
 )
